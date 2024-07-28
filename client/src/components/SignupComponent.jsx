@@ -1,6 +1,6 @@
 "use client";
 
-import CardWrapper from "./Cardwrapper";
+import CardWrapper from "./CardWrapper";
 import {
   Form,
   FormControl,
@@ -20,7 +20,6 @@ const SignupComponent = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  // Initialize the form with validation rules
   const form = useForm({
     defaultValues: {
       email: '',
@@ -29,10 +28,8 @@ const SignupComponent = () => {
       confirmPassword: '',
       options: 'counselor',
     },
-    mode: 'onBlur', // Validate fields on blur
+    mode: 'onBlur', 
   });
-
-  // Form submission handler
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -46,7 +43,6 @@ const SignupComponent = () => {
     }
 
     try {
-      // Make API request to signup endpoint
       const response = await axios.post('http://localhost:8080/user/register', {
         email: data.email,
         name: data.name,
@@ -55,9 +51,8 @@ const SignupComponent = () => {
       });
 
       setMessage('User registered successfully');
-      
-      window.location.href = '/onboarding'; // Change to the onboarding route
-      localStorage.setItem("token", response.data.token)
+      localStorage.setItem("token", response.data.token);
+      window.location.href = '/Onboarding'; 
     } catch (error) {
       setError('Registration failed');
     } finally {
@@ -97,9 +92,7 @@ const SignupComponent = () => {
                       placeholder="johndoe@gmail.com"
                     />
                   </FormControl>
-                  {fieldState.error && (
-                    <FormMessage>{fieldState.error.message}</FormMessage>
-                  )}
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
                 </FormItem>
               )}
             />
@@ -115,9 +108,7 @@ const SignupComponent = () => {
                   <FormControl>
                     <Input {...field} placeholder="John Doe" />
                   </FormControl>
-                  {fieldState.error && (
-                    <FormMessage>{fieldState.error.message}</FormMessage>
-                  )}
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
                 </FormItem>
               )}
             />
@@ -137,9 +128,7 @@ const SignupComponent = () => {
                   <FormControl>
                     <Input {...field} type="password" placeholder="******" />
                   </FormControl>
-                  {fieldState.error && (
-                    <FormMessage>{fieldState.error.message}</FormMessage>
-                  )}
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
                 </FormItem>
               )}
             />
@@ -159,17 +148,14 @@ const SignupComponent = () => {
                   <FormControl>
                     <Input {...field} type="password" placeholder="******" />
                   </FormControl>
-                  {fieldState.error && (
-                    <FormMessage>{fieldState.error.message}</FormMessage>
-                  )}
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
                 </FormItem>
               )}
             />
           </div>
 
           <div className="flex justify-center gap-3">
-
-            <label className="flex">
+            <label className="flex items-center">
               <Input
                 type="radio"
                 name="options"
@@ -177,25 +163,25 @@ const SignupComponent = () => {
                 {...form.register('options')}
                 defaultChecked
               />
-              Counselor
+              <span className="ml-2">Counselor</span>
             </label>
-            <label className="flex">
+            <label className="flex items-center">
               <Input
                 type="radio"
                 name="options"
                 value="student"
                 {...form.register('options')}
               />
-              Student
+              <span className="ml-2">Student</span>
             </label>
-            <label className="flex">
+            <label className="flex items-center">
               <Input
                 type="radio"
                 name="options"
                 value="organization"
                 {...form.register('options')}
               />
-              Organization
+              <span className="ml-2">Organization</span>
             </label>
           </div>
           <Button type="submit" className="w-full">
@@ -207,4 +193,4 @@ const SignupComponent = () => {
   );
 };
 
-export default SignupComponent;
+export default SignupComponent

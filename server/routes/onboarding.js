@@ -16,21 +16,32 @@ module.exports = function(authMiddleware) {
           student: true,
         },
       });
-
+  
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
-
-      res.status(200).json(user);
+  
+      // Filter out only the relevant onboarding information
+      const onboardingInfo = {};
+      if (user.organization) {
+        onboardingInfo.organization = user.organization.onboarded;
+      }
+      if (user.counselor) {
+        onboardingInfo.counselor = user.counselor.onboarded;
+      }
+      if (user.student) {
+        onboardingInfo.student = user.student.onboarded;
+      }
+  
+      res.status(200).json(onboardingInfo);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Failed to fetch user data' });
     }
   });
-
   // Route to onboard an organization
   router.post('/onboard/organization', authMiddleware, async (req, res) => {
-    const { type, yearFounded, gender, bio } = req.body;
+    const { type, yearFounded,  bio } = req.body;
 
     try {
       const user = await prisma.user.update({
@@ -40,7 +51,6 @@ module.exports = function(authMiddleware) {
             create: {
               type,
               yearFounded,
-              gender,
               bio,
               onboarded: true
             }

@@ -7,9 +7,10 @@ const cors = require('cors');
 
 dotenv.config();
 
-const { setUpPassportLocal } = require("./middleware/authMiddleware");
+const { setUpPassportLocal, checkIfAuthenticated, organizationMiddleware } = require("./middleware/authMiddleware");
 const userRoutes = require('./routes/user.js');
 const onboardingRoutes = require('./routes/onboarding.js');
+const postRoutes = require('./routes/post.js');
 const app = express();
 const PORT = 8080;
 
@@ -29,10 +30,9 @@ const logger = (req, _res, next) => {
 app.use(logger);
 app.use(
     session({
-        secret: process.env.JWT_SECRET,
-        resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false },
+        name: 'session',
+        keys: [process.env.JWT_SECRET],
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
     })
 );
 
@@ -41,14 +41,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/user", userRoutes(authMiddleware));
-app.use("/onboarding", onboardingRoutes(authMiddleware))
-// Root route
+app.use("/onboarding", onboardingRoutes(authMiddleware));
+app.use("/post", postRoutes(authMiddleware)); // Include post routes
+
 app.get('/', (req, res) => {
     res.status(200).json({ message: "Hello World" });
     console.log("Welcome");
 });
 
-// Start server
 const server = app.listen(PORT, () => {
     console.log(`Listening on ${PORT}`);
 });

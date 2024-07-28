@@ -33,7 +33,7 @@ const LoginComponent = () => {
       console.log(data.email)
       console.log(data.password)
     try {
-      const response = await axios.post('http://localhost:8080/login', {
+      const response = await axios.post('http://localhost:8080/user/login', {
         email: data.email,
         password: data.password,
       });
@@ -41,7 +41,7 @@ const LoginComponent = () => {
    
       localStorage.setItem('token', response.data.token);
 
-      window.location.href = '/dashboard'; // Example redirect
+      window.location.href = '/Home'; // Example redirect
     } catch (error) {
       setError('Invalid email or password');
     } finally {
