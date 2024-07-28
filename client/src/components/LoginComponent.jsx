@@ -4,41 +4,73 @@ import CardWrapper from "./Cardwrapper";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import  {Input} from "./ui/input";
-import  {Button}  from "./ui/button";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { useState } from "react";
+import axios from "axios";
 
 const LoginComponent = () => {
   const [loading, setLoading] = useState(false);
-  
-  const onSubmit = (data) => {
+  const [error, setError] = useState('');
+
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    mode: 'onBlur', // Validate fields on blur
+  });
+
+  const onSubmit = async (data) => {
     setLoading(true);
-    console.log(data);
+    setError('');
+      console.log(data.email)
+      console.log(data.password)
+    try {
+      const response = await axios.post('http://localhost:8080/login', {
+        email: data.email,
+        password: data.password,
+      });
+
+   
+      localStorage.setItem('token', response.data.token);
+
+      window.location.href = '/dashboard'; // Example redirect
+    } catch (error) {
+      setError('Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const form = useForm()
   return (
-      <CardWrapper
-      label="Create an account"
-      title="Register"
-      backButtonHref="/auth/login"
-      backButtonLabel="Already have an account? Login here."
+    <CardWrapper
+      label="Login"
+      title="Login"
+      backButtonHref="/auth/signup"
+      backButtonLabel="Don't have an account? Sign up here."
     >
       <Form {...form}>
-
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {error && <p style={{ color: 'red' }}>{error}</p>}
           <div className="space-y-4">
             <FormField
               control={form.control}
               name="email"
-              render={({ field }) => (
+              rules={{
+                required: 'Email is required',
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                  message: 'Invalid email address',
+                },
+              }}
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
@@ -48,29 +80,37 @@ const LoginComponent = () => {
                       placeholder="johndoe@gmail.com"
                     />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <FormMessage>{fieldState.error.message}</FormMessage>
+                  )}
                 </FormItem>
               )}
             />
-  
+
             <FormField
               control={form.control}
               name="password"
-              render={({ field }) => (
+              rules={{
+                required: 'Password is required',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters long',
+                },
+              }}
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input {...field} type="password" placeholder="******" />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <FormMessage>{fieldState.error.message}</FormMessage>
+                  )}
                 </FormItem>
               )}
             />
-        
           </div>
-        
-     
-            <Button type="submit" className="w-full" >
+          <Button type="submit" className="w-full">
             {loading ? "Loading..." : "Login"}
           </Button>
         </form>

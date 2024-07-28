@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  email         String         @unique
+  name          String
+  password      String
+  role          UserRole
+  createdAt     DateTime       @default(now())
+  student       Student?
+  counselor     Counselor?
+  organization  Organization?
+}
+
+model Student {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String         @unique @db.ObjectId
+  user          User           @relation(fields: [userId], references: [id])
+  studentId     String         @unique
+  school        String
+  bio           String
+  gender        String
+  graduationYear Int
+  onboarded     Boolean        @default(false)
+}
+
+model Counselor {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String         @unique @db.ObjectId
+  user          User           @relation(fields: [userId], references: [id])
+  school        String
+  bio           String
+  gender        String
+  onboarded     Boolean        @default(false)
+}
+
+model Organization {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String         @unique @db.ObjectId
+  user          User           @relation(fields: [userId], references: [id])
+  type          String
+  yearFounded   Int
+  gender        String
+  bio           String
+  onboarded     Boolean        @default(false)
+  posts         Post[]
+}
+
+model Post {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String        @db.ObjectId
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum UserRole {
+  STUDENT
+  COUNSELOR
+  ORGANIZATION
+}

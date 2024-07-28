@@ -4,26 +4,67 @@ import CardWrapper from "./Cardwrapper";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import  {Input} from "./ui/input";
-import  {Button}  from "./ui/button";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { useState } from "react";
+import axios from "axios";
 
 const SignupComponent = () => {
   const [loading, setLoading] = useState(false);
-  
-  const onSubmit = (data) => {
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  // Initialize the form with validation rules
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      name: '',
+      password: '',
+      confirmPassword: '',
+      options: 'counselor',
+    },
+    mode: 'onBlur', // Validate fields on blur
+  });
+
+  // Form submission handler
+
+  const onSubmit = async (data) => {
     setLoading(true);
-    console.log(data);
+    setError('');
+    setMessage('');
+
+    if (data.password !== data.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Make API request to signup endpoint
+      const response = await axios.post('http://localhost:8080/user/register', {
+        email: data.email,
+        name: data.name,
+        password: data.password,
+        UserRole: data.options.toUpperCase(),
+      });
+
+      setMessage('User registered successfully');
+      
+      window.location.href = '/onboarding'; // Change to the onboarding route
+      localStorage.setItem("token", response.data.token)
+    } catch (error) {
+      setError('Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const form = useForm()
   return (
     <CardWrapper
       label="Create an account"
@@ -33,11 +74,20 @@ const SignupComponent = () => {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {message && <p style={{ color: 'green' }}>{message}</p>}
           <div className="space-y-4">
             <FormField
               control={form.control}
               name="email"
-              render={({ field }) => (
+              rules={{
+                required: 'Email is required',
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                  message: 'Invalid email address',
+                },
+              }}
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
@@ -47,89 +97,109 @@ const SignupComponent = () => {
                       placeholder="johndoe@gmail.com"
                     />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <FormMessage>{fieldState.error.message}</FormMessage>
+                  )}
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="name"
-              render={({ field }) => (
+              rules={{
+                required: 'Name is required',
+              }}
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="John Doe" />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <FormMessage>{fieldState.error.message}</FormMessage>
+                  )}
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="password"
-              render={({ field }) => (
+              rules={{
+                required: 'Password is required',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters long',
+                },
+              }}
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input {...field} type="password" placeholder="******" />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <FormMessage>{fieldState.error.message}</FormMessage>
+                  )}
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="confirmPassword"
-              render={({ field }) => (
+              rules={{
+                required: 'Confirm Password is required',
+                validate: (value) => {
+                  const { password } = form.getValues();
+                  return value === password || 'Passwords do not match';
+                },
+              }}
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
                     <Input {...field} type="password" placeholder="******" />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <FormMessage>{fieldState.error.message}</FormMessage>
+                  )}
                 </FormItem>
               )}
             />
           </div>
-        
-          <span className="flex justify-center gap-3 ">
-              <label className="flex" htmlFor="">
-                <Input
-                  type="radio"
-                  name="options"
-                  value="counselor"
-                //   checked={gender === "Male"}
-                //   onChange={handleOptionChange}
-                  className="radio"
-                  defaultChecked
-                />
-                Counselor
-              </label>
-              <label className="flex">
-                <Input
-                  type="radio"
-                  name="options"
-                  value="student"
-                //   checked={gender === "Female"}
-                //   onChange={handleOptionChange}
-                  className="w-5"
-                />
-                Student
-              </label>
-              <label className="flex">
-                <Input
-                  type="radio"
-                  name="options"
-                  value="Organisation "
-                //   checked={gender === "Female"}
-                //   onChange={handleOptionChange}
-                  className="w-5"
-                />
-                Organization
-              </label>
-            </span>
-            <Button type="submit" className="w-full" >
-            {loading ? "Loading..." : "Register"}
+
+          <div className="flex justify-center gap-3">
+
+            <label className="flex">
+              <Input
+                type="radio"
+                name="options"
+                value="counselor"
+                {...form.register('options')}
+                defaultChecked
+              />
+              Counselor
+            </label>
+            <label className="flex">
+              <Input
+                type="radio"
+                name="options"
+                value="student"
+                {...form.register('options')}
+              />
+              Student
+            </label>
+            <label className="flex">
+              <Input
+                type="radio"
+                name="options"
+                value="organization"
+                {...form.register('options')}
+              />
+              Organization
+            </label>
+          </div>
+          <Button type="submit" className="w-full">
+            {loading ? 'Loading...' : 'Register'}
           </Button>
         </form>
       </Form>
